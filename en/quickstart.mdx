@@ -1,0 +1,125 @@
+---
+title: "Quickstart"
+description: "Get started with ByteRouter in three simple steps to access various AI models"
+icon: 'rocket'
+---
+
+> Get started with ByteRouter in just three simple steps to access various AI models.
+
+## Step 1: Account Setup
+
+### 1.1 Register Account
+
+Visit [ByteRouter Official Website](https://byterouter.ai) to register:
+
+* Sign up with your email
+* Verify your email address
+* Log in to the console
+
+### 1.2 Account Top-up
+
+Top up your account in the console:
+
+1. Click the "Wallet" menu
+2. Select a top-up amount
+3. Complete the payment
+
+## Step 2: Create API Key
+
+### 2.1 Generate Key
+
+1. Click on "API Keys" in the dashboard navigation: [https://byterouter.ai/keys](https://byterouter.ai/keys)
+2. Create an API key: Click the "Create API Key" button in the top right, name your key (e.g., "my-key"), click confirm, and you'll have a new API key.
+
+## Step 3: Start Making Calls
+
+### 3.1 Get Connection Information
+
+* **API Endpoint (base_url)**: `https://byterouter.ai`
+* **API Key**: Your newly created key
+* **Request Format**: Fully compatible with OpenAI API format.
+
+### 3.2 Test Your Call
+
+Quick test using curl:
+
+```bash
+curl https://byterouter.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gpt-4.1-mini",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
+
+### 3.3 Code Examples
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key="YOUR_API_KEY",
+        base_url="https://byterouter.ai/v1"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "user", "content": "Hello!"}
+        ]
+    )
+
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+
+  <Tab title="Node.js">
+    ```javascript
+    import OpenAI from 'openai';
+
+    const openai = new OpenAI({
+      apiKey: 'YOUR_API_KEY',
+      baseURL: 'https://byterouter.ai/v1'
+    });
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      messages: [{ role: 'user', content: 'Hello!' }]
+    });
+
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+</Tabs>
+
+## Frequently Asked Questions
+
+### How do I switch models?
+
+Simply modify the `model` parameter in your request:
+
+```json
+{
+  "model": "gpt-4.1",           // Change gpt-4.1 to your desired model, e.g., claude-sonnet-4.8
+}
+```
+
+### Which programming languages are supported?
+
+ByteRouter is compatible with the OpenAI API standard and supports all languages that OpenAI SDKs support:
+
+* Python
+* JavaScript/TypeScript
+* Java
+* C#/.NET
+* Go
+* Ruby
+* PHP
+* And more...
+
+### Need help?
+
+1. Contact support: [br@byterouter.ai](mailto:br@byterouter.ai)

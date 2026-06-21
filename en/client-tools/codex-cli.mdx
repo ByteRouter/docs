@@ -1,0 +1,261 @@
+---
+title: "Using ByteRouter with Codex CLI"
+sidebarTitle: "Codex CLI"
+description: "Detailed guide on how to configure and use ByteRouter API service in Codex CLI, enabling you to call various AI models directly from the command line for coding assistance."
+---
+
+## Introduction
+
+Codex CLI is an open-source terminal programming agent from OpenAI that can read and write files, run commands, fix bugs, and complete entire coding tasks directly from the command line.
+By integrating ByteRouter, you can freely use multiple models including GPT and Claude in Codex CLI, while enjoying more flexible and cost-effective billing.
+
+## Prerequisites
+
+Before getting started, ensure you have:
+
+1. **Node.js Installed**
+   Download and install from [Node.js official website](https://nodejs.org/) (recommended LTS version v20 or higher) for npm-based installation of Codex CLI
+
+2. **ByteRouter API Key**
+   Sign in to [ByteRouter Console](https://byterouter.ai/keys) to get your API key
+
+<Note>**Tip:** If you don't have a ByteRouter account yet, register at [ByteRouter](https://byterouter.ai) first.</Note>
+
+## Step 1: Install Codex CLI
+
+Choose one of the following installation methods:
+
+<Tabs>
+  <Tab title="npm (Recommended)">
+    Install globally via npm, works on all operating systems:
+
+    ```bash theme={null}
+    npm install -g @openai/codex
+    ```
+
+    <Note>If you encounter permission issues, prepend `sudo` (macOS / Linux).</Note>
+  </Tab>
+
+  <Tab title="Homebrew (macOS)">
+    macOS users can also install via Homebrew:
+
+    ```bash theme={null}
+    brew install codex
+    ```
+  </Tab>
+</Tabs>
+
+### Verify Installation
+
+After installation, run the following command to confirm success:
+
+```bash theme={null}
+codex --version
+```
+
+If a version number is displayed, the installation is successful.
+
+## Step 2: Configure ByteRouter API
+
+Codex CLI manages model providers through configuration files in the `~/.codex/` directory. We simply need to add a custom provider pointing to ByteRouter.
+
+### 2.1 Find the Configuration Directory
+
+* **macOS / Linux:** `~/.codex/`
+* **Windows:** `C:\Users\<username>\.codex\`
+
+<Note>If the directory doesn't exist, run `codex` once in your terminal and press `Ctrl + C` to exit. The directory will be created automatically.</Note>
+
+### 2.2 Configure API Key
+
+Create or edit the `auth.json` file in the configuration directory with your ByteRouter key:
+
+```json theme={null}
+{
+  "OPENAI_API_KEY": "your_api_key_here"
+}
+```
+
+| Field              | Description           |
+| ------------------ | --------------------- |
+| `OPENAI_API_KEY`   | Your ByteRouter API key |
+
+### 2.3 Configure Model Provider
+
+Create or edit the `config.toml` file in the configuration directory and add the ByteRouter provider:
+
+```toml theme={null}
+# Default model to use
+model = "gpt-5.5"
+# Default provider, corresponds to [model_providers.byterouter] below
+model_provider = "byterouter"
+
+# ByteRouter provider configuration
+[model_providers.byterouter]
+name = "ByteRouter"
+base_url = "https://byterouter.ai/v1"
+wire_api = "responses"
+requires_openai_auth = true
+```
+
+| Field                  | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `model`                | Default model ID, choose from the list below   |
+| `model_provider`       | Default provider, must match ID in `[model_providers.xxx]` |
+| `name`                 | Provider display name, customizable            |
+| `base_url`             | ByteRouter's OpenAI-compatible address, fixed as `https://byterouter.ai/v1` |
+| `wire_api`             | Communication protocol, new Codex requires `responses` (Responses API) |
+| `requires_openai_auth` | Set to `true` to use the key from `auth.json`  |
+
+After saving both files, restart Codex CLI for changes to take effect.
+
+<Warning>Ensure `auth.json` is valid JSON and `config.toml` is valid TOML. Don't use Chinese quotes, or the configuration won't work.</Warning>
+
+## Step 3: Get Started
+
+### Verify Configuration
+
+In any project directory, run the following command to verify your configuration:
+
+```bash theme={null}
+codex "Introduce yourself in one sentence"
+```
+
+If you receive an AI response, the configuration is successful. If you see a login screen or `401`, `403` errors, refer to the troubleshooting section below.
+
+### Interactive Mode
+
+Run `codex` directly to enter the interactive interface, ideal for handling complete coding tasks:
+
+```bash theme={null}
+codex
+```
+
+Once inside, describe your requirements in natural language, for example:
+
+```
+Create an Express.js server with a health check endpoint that returns JSON
+```
+
+Codex will automatically analyze your project, generate code, run commands, and request confirmation before sensitive operations.
+
+### Approval Mode
+
+On first run, Codex will let you choose the approval level for operations:
+
+| Mode             | Description                              |
+| ---------------- | ---------------------------------------- |
+| **Read-only**    | Only allow file reads; modifications and commands need approval |
+| **Auto**         | Can autonomously read/write files and run commands within the directory (recommended) |
+| **Full access**  | Execute any operation without confirmation (use with caution) |
+
+We recommend starting with **Auto** mode. Type `/approvals` in the interactive interface to adjust anytime.
+
+### Switch Models
+
+Type `/model` command in the interactive interface to quickly switch models, or modify the `model` field in `config.toml` and restart.
+
+## Supported Models
+
+For Codex CLI, we recommend the following GPT-5 series models:
+
+| Model ID         | Characteristics        | Recommended Use Case    |
+| ---------------- | ---------------------- | ----------------------- |
+| `gpt-5.5`        | Latest flagship, strongest code ability | Codex first choice, complex engineering tasks |
+| `gpt-5.4`        | Previous generation flagship, powerful capability | Complex coding, architecture design |
+| `gpt-5.4-mini`   | Lightweight, fast speed, good price-performance | Daily coding, rapid iteration |
+| `gpt-5.3-codex`  | Codex-optimized coding model | Agent-style coding tasks |
+| `gpt-5.2`        | Stable and balanced     | Regular coding tasks    |
+
+<Tip>
+  **Model Selection Recommendation:** The above GPT-5 series models work best with Codex CLI. For optimal results, we recommend prioritizing `gpt-5.5`; `gpt-5.3-codex` is specifically optimized for Codex's agent-based coding scenarios.
+</Tip>
+
+## Common Commands
+
+Here are frequently used commands and shortcuts in Codex CLI:
+
+| Command                  | Description             |
+| ----------------------- | ----------------------- |
+| `codex`                 | Enter interactive mode  |
+| `codex "task description"` | Start with initial instruction |
+| `codex exec "task description"` | Non-interactive mode, execute and exit |
+| `codex --model gpt-5.4` | Start with specified model |
+| `codex --version`       | Check version number    |
+| `/model`                | Switch model in interactive mode |
+| `/approvals`            | Adjust approval mode in interactive interface |
+| `Ctrl + C`              | Exit interactive mode   |
+
+## Troubleshooting
+
+### Q1: Login screen appears after startup?
+
+If a login prompt appears on startup, the configuration hasn't taken effect.
+
+**Troubleshooting steps:**
+
+1. Confirm both `config.toml` and `auth.json` are in the `~/.codex/` directory
+2. Check that `model_provider` in `config.toml` is set to `byterouter`
+3. Verify `auth.json` has valid JSON format and the key is fully entered
+
+### Q2: 401 / 403 errors?
+
+| Error Code         | Meaning           | Solution                                  |
+| ------------------ | ----------------- | ----------------------------------------- |
+| `401 Unauthorized` | Invalid or missing API key | Check your key in `auth.json` is correct |
+| `403 Forbidden`    | Insufficient permissions or expired key | Verify key status at [ByteRouter Console](https://byterouter.ai/keys) |
+
+Ensure `base_url` is set to `https://byterouter.ai/v1`.
+
+### Q3: Connection failure?
+
+1. Check your network connection
+2. Verify `base_url` in `config.toml` is correct
+3. If using a proxy, ensure it allows access to `byterouter.ai`
+
+### Q4: `wire_api = "chat"` no longer supported?
+
+New Codex CLI (0.84.0 and later) has removed the `chat` protocol. Change `wire_api` in `config.toml` to `responses`:
+
+```toml theme={null}
+wire_api = "responses"
+```
+
+ByteRouter supports Responses API. After making this change, restart Codex.
+
+### Q5: Tool call or execution errors?
+
+Confirm `wire_api` in `config.toml` is set to `responses`. If you encounter compatibility issues, try switching to recommended models (like `gpt-4.1` or `claude-opus-4.5`), which work more reliably with Codex CLI.
+
+### Q6: Want to use environment variables instead of auth.json?
+
+You can also configure the key via environment variables. Modify the provider configuration in `config.toml`:
+
+```toml theme={null}
+[model_providers.byterouter]
+name = "ByteRouter"
+base_url = "https://byterouter.ai/v1"
+wire_api = "responses"
+env_key = "BYTEROUTER_API_KEY"
+```
+
+Then set the environment variable `BYTEROUTER_API_KEY` to your ByteRouter key. You won't need `auth.json` in this case.
+
+### Q7: How to switch models?
+
+Two ways:
+
+1. **In interactive mode:** Type `/model` command to switch
+2. **Modify configuration:** Change the `model` field in `config.toml` and restart Codex CLI
+
+## Support & Help
+
+If you encounter any issues:
+
+* 📧 Technical Support: [br@byterouter.ai](mailto:br@byterouter.ai)
+
+---
+
+<Card title="Get Started with ByteRouter" icon="rocket" href="https://byterouter.ai">
+  Register now and get your API key to start using multiple AI models in Codex CLI!
+</Card>

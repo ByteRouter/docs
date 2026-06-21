@@ -1,0 +1,288 @@
+---
+title: "Using ByteRouter with Claude Code"
+sidebarTitle: "Claude Code"
+description: "Detailed guide on how to configure and use ByteRouter API service in Claude Code CLI, enabling you to call various AI models directly from the terminal for coding assistance."
+---
+
+## Prerequisites
+
+Claude Code is a command-line AI programming assistant from Anthropic that supports direct conversation with AI, code generation, debugging, and more in your terminal.
+By integrating ByteRouter, you can access multiple AI models including GPT, Claude, and Gemini directly within Claude Code.
+
+Before getting started, ensure you have:
+
+1. **ByteRouter API Key**
+   Sign in to [ByteRouter Console](https://byterouter.ai/keys) to get your API key
+
+<Note>**Tip:** If you don't have a ByteRouter account yet, register at [ByteRouter](https://byterouter.ai) first and obtain your API key.</Note>
+
+## Step 1: Install Claude Code
+
+Choose one of the following installation methods:
+
+<Tabs>
+  <Tab title="macOS / Linux (Recommended)">
+    Install using the official script:
+
+    ```bash theme={null}
+    curl -fsSL https://claude.ai/install.sh | bash
+    ```
+
+    Or install via Homebrew:
+
+    ```bash theme={null}
+    brew install --cask claude-code
+    ```
+
+    <Note>If you encounter permission issues, prepend `sudo` to the command.</Note>
+  </Tab>
+
+  <Tab title="Windows">
+    **PowerShell:**
+
+    ```powershell theme={null}
+    irm https://claude.ai/install.ps1 | iex
+    ```
+
+    **CMD:**
+
+    ```cmd theme={null}
+    curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+    ```
+  </Tab>
+
+  <Tab title="NPM Installation">
+    If you have Node.js 18 or later installed, you can install via npm:
+
+    ```bash theme={null}
+    npm install -g @anthropic-ai/claude-code
+    ```
+
+    Works on all operating systems.
+  </Tab>
+</Tabs>
+
+### Verify Installation
+
+After installation, run the following command to confirm success:
+
+```bash theme={null}
+claude --version
+```
+
+If a version number (e.g., `1.x.x`) is displayed, the installation is successful.
+
+## Step 2: Configure ByteRouter API
+
+Three configuration methods are available. Choose the one that suits your workflow.
+
+### Method 1: Edit settings.json (Recommended)
+
+This is the most stable configuration method and works persistently after one-time setup.
+
+**1. Find the configuration directory:**
+
+* Windows: Press `Win + R`, type `%userprofile%\.claude`
+* macOS: Press `Command + Shift + G`, type `~/.claude`
+* Linux: Navigate to `~/.claude` directory
+
+<Note>If the directory doesn't exist, run `claude` once in your terminal and press `Ctrl + C` to exit. The directory will be created automatically.</Note>
+
+**2. Create or edit the `settings.json` file:**
+
+```json theme={null}
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://byterouter.ai/v1",
+    "ANTHROPIC_AUTH_TOKEN": "your_api_key_here",
+    "ANTHROPIC_MODEL": "claude-sonnet-4.6"
+  }
+}
+```
+
+| Parameter                     | Description                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `ANTHROPIC_BASE_URL`          | ByteRouter API endpoint, fixed as `https://byterouter.ai/v1` |
+| `ANTHROPIC_AUTH_TOKEN`        | Your ByteRouter API key                         |
+| `ANTHROPIC_MODEL`             | Default model to use, choose from the list below |
+
+After saving, restart Claude Code for changes to take effect.
+
+### Method 2: Permanent Environment Variables
+
+Configure at the system level so all terminal windows automatically load the settings.
+
+<Tabs>
+  <Tab title="macOS (zsh)">
+    ```bash theme={null}
+    echo 'export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"' >> ~/.zshrc
+    echo 'export ANTHROPIC_AUTH_TOKEN="your_api_key_here"' >> ~/.zshrc
+    echo 'export ANTHROPIC_MODEL="claude-sonnet-4.6"' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+  </Tab>
+
+  <Tab title="macOS / Linux (bash)">
+    ```bash theme={null}
+    echo 'export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"' >> ~/.bashrc
+    echo 'export ANTHROPIC_AUTH_TOKEN="your_api_key_here"' >> ~/.bashrc
+    echo 'export ANTHROPIC_MODEL="claude-sonnet-4.6"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+  </Tab>
+
+  <Tab title="Windows">
+    **Method A: GUI Settings**
+
+    1. Right-click "This PC" → "Properties" → "Advanced system settings" → "Environment Variables"
+    2. Under "User variables", create new variables:
+       * `ANTHROPIC_BASE_URL` = `https://byterouter.ai/v1`
+       * `ANTHROPIC_AUTH_TOKEN` = `your_api_key_here`
+       * `ANTHROPIC_MODEL` = `claude-sonnet-4.6`
+    3. Restart your terminal window
+
+    **Method B: PowerShell Command**
+
+    ```powershell theme={null}
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', 'https://byterouter.ai/v1', 'User')
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_AUTH_TOKEN', 'your_api_key_here', 'User')
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_MODEL', 'claude-sonnet-4.6', 'User')
+    ```
+  </Tab>
+</Tabs>
+
+### Method 3: Temporary Environment Variables
+
+Suitable for temporary testing. Configuration will be lost when you close the terminal.
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash theme={null}
+    export ANTHROPIC_AUTH_TOKEN="your_api_key_here"
+    export ANTHROPIC_MODEL="claude-sonnet-4.6"
+    export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"
+    claude
+    ```
+  </Tab>
+
+  <Tab title="Windows (PowerShell)">
+    ```powershell theme={null}
+    $env:ANTHROPIC_AUTH_TOKEN="your_api_key_here"
+    $env:ANTHROPIC_MODEL="claude-sonnet-4.6"
+    $env:ANTHROPIC_BASE_URL="https://byterouter.ai/v1"
+    claude
+    ```
+  </Tab>
+
+  <Tab title="Windows (CMD)">
+    ```cmd theme={null}
+    set ANTHROPIC_AUTH_TOKEN=your_api_key_here
+    set ANTHROPIC_MODEL=claude-sonnet-4.6
+    set ANTHROPIC_BASE_URL=https://byterouter.ai/v1
+    claude
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>Temporary environment variables only work in the current terminal window. You'll need to reconfigure them after opening a new terminal or restarting.</Warning>
+
+## Step 3: Get Started
+
+### Verify Configuration
+
+Start Claude Code and send a simple message to confirm configuration:
+
+```bash theme={null}
+claude "Hello"
+```
+
+If you receive an AI response, the configuration is successful. If you encounter errors, refer to the troubleshooting section below.
+
+### Usage Modes
+
+Claude Code offers two interaction modes:
+
+* **Interactive Mode**: Run `claude` to enter continuous conversation, ideal for complex tasks
+* **Single Command**: Run `claude "your question"` to get a one-time response and exit, perfect for quick queries
+
+### Supported Models
+
+ByteRouter supports various AI models that you can switch between based on your needs. See the [Getting Started](/quickstart) page for the complete model list.
+
+#### Common Model Examples
+
+| Model Name          | Characteristics |
+| ------------------- | --------------- |
+| `claude-sonnet-4.6` | Balanced performance and speed |
+| `claude-opus-4.5`   | Strongest overall capability |
+| `gpt-4.1`           | Efficient GPT model |
+| `gemini-2.0`        | Google's advanced model |
+
+### Common Commands
+
+Here are frequently used commands and shortcuts in Claude Code:
+
+| Command            | Description              |
+| ------------------ | ----------------------- |
+| `claude`           | Enter interactive mode   |
+| `claude "question"` | Ask a single question    |
+| `claude --version` | Check version number     |
+| `/model`           | Switch model in interactive mode |
+| `/help`            | View help information    |
+| `Ctrl + C`         | Exit interactive mode    |
+
+## Troubleshooting
+
+### Q1: Login selection screen still appears after configuration?
+
+If "Select login method" is displayed, the configuration hasn't taken effect.
+
+**Troubleshooting steps:**
+
+1. **Using settings.json method**: Verify the file path is correct
+   * Windows: `C:\Users\<username>\.claude\settings.json`
+   * macOS / Linux: `~/.claude/settings.json`
+2. **Using environment variables**: Ensure you started Claude Code **in the same terminal window** where you set the variables
+3. **Check JSON format**: Make sure brackets, commas, and quotes are correct (don't use Chinese quotes)
+
+### Q2: Authentication errors?
+
+| Error Message      | Meaning        | Solution                              |
+| ------------------- | -------------- | ------------------------------------- |
+| `401 Unauthorized` | Invalid API key | Check your key is correct, verify in [ByteRouter Console](https://byterouter.ai/keys) |
+| `403 Forbidden`    | Insufficient permissions | Confirm your API key isn't expired or disabled |
+
+Ensure `ANTHROPIC_BASE_URL` is set to `https://byterouter.ai/v1`.
+
+### Q3: "Unable to connect" error?
+
+This means Claude Code cannot connect to the API service.
+
+1. Check your network connection
+2. Verify `ANTHROPIC_BASE_URL` is configured correctly
+3. If using a proxy, ensure it allows access to `byterouter.ai`
+
+### Q4: How to switch models?
+
+Two options:
+
+1. **In interactive mode**: Type `/model` command to switch
+2. **Modify configuration**: Change the `ANTHROPIC_MODEL` field in `settings.json` or environment variables, then restart Claude Code
+
+### Q5: Slow responses?
+
+1. Try switching to a faster model
+2. Shorten your questions to reduce context length
+3. Check your local network status
+
+## Support & Help
+
+If you encounter any issues:
+
+* 📧 Technical Support: [br@byterouter.ai](mailto:br@byterouter.ai)
+
+---
+
+<Card title="Get Started with ByteRouter" icon="rocket" href="https://byterouter.ai">
+  Register now and get your API key to start using multiple AI models in Claude Code!
+</Card>

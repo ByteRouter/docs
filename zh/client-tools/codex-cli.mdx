@@ -1,0 +1,261 @@
+---
+title: "在 Codex CLI 中使用 ByteRouter"
+sidebarTitle: "Codex CLI"
+description: "详细指导如何在 Codex CLI 中配置和使用 ByteRouter API 服务，通过简单的配置即可在 Codex CLI 中调用多种 AI 模型进行辅助编程。"
+---
+
+## 简介
+
+Codex CLI 是 OpenAI 推出的开源终端编程智能体，可以在命令行中直接读写文件、运行命令、修复 Bug 并完成完整的编码任务。
+通过接入 ByteRouter，您可以在 Codex CLI 中自由使用包括 GPT、Claude 在内的多种模型，并享受更灵活、更优惠的计费方式。
+
+## 准备工作
+
+在开始之前，请确保：
+
+1. **已安装 Node.js**
+   从 [Node.js 官网](https://nodejs.org/) 下载并安装（建议使用最新 LTS 版本，v20 或更高），用于通过 npm 安装 Codex CLI
+
+2. **已获取 ByteRouter API 密钥**
+   登录 [ByteRouter 控制台](https://byterouter.ai/keys) 获取您的 API 密钥
+
+<Note>**提示：** 如果还没有 ByteRouter 账户，请先在 [ByteRouter 官网](https://byterouter.ai) 注册并获取 API 密钥。</Note>
+
+## 第一步：安装 Codex CLI
+
+选择以下任一方式安装：
+
+<Tabs>
+  <Tab title="npm（推荐）">
+    使用 npm 全局安装，适用于所有操作系统：
+
+    ```bash theme={null}
+    npm install -g @openai/codex
+    ```
+
+    <Note>如果遇到权限问题，请在命令前加 `sudo`（macOS / Linux）。</Note>
+  </Tab>
+
+  <Tab title="Homebrew (macOS)">
+    macOS 用户也可以通过 Homebrew 安装：
+
+    ```bash theme={null}
+    brew install codex
+    ```
+  </Tab>
+</Tabs>
+
+### 验证安装
+
+安装完成后，运行以下命令确认安装成功：
+
+```bash theme={null}
+codex --version
+```
+
+如果输出版本号，说明安装成功。
+
+## 第二步：配置 ByteRouter API
+
+Codex CLI 通过 `~/.codex/` 目录下的配置文件管理模型供应商。我们只需新增一个指向 ByteRouter 的自定义供应商即可。
+
+### 2.1 找到配置目录
+
+* **macOS / Linux：** `~/.codex/`
+* **Windows：** `C:\Users\<用户名>\.codex\`
+
+<Note>如果目录不存在，先在终端运行一次 `codex` 再按 `Ctrl + C` 退出，会自动生成该目录。</Note>
+
+### 2.2 配置 API 密钥
+
+在配置目录下创建或编辑 `auth.json` 文件，填入您的 ByteRouter 密钥：
+
+```json theme={null}
+{
+  "OPENAI_API_KEY": "your_api_key_here"
+}
+```
+
+| 字段               | 说明              |
+| ---------------- | --------------- |
+| `OPENAI_API_KEY` | 您的 ByteRouter API 密钥 |
+
+### 2.3 配置模型供应商
+
+在配置目录下创建或编辑 `config.toml` 文件，添加 ByteRouter 供应商：
+
+```toml theme={null}
+# 默认使用的模型
+model = "gpt-5.5"
+# 默认使用的供应商，对应下方 [model_providers.byterouter]
+model_provider = "byterouter"
+
+# ByteRouter 供应商配置
+[model_providers.byterouter]
+name = "ByteRouter"
+base_url = "https://byterouter.ai/v1"
+wire_api = "responses"
+requires_openai_auth = true
+```
+
+| 字段                     | 说明                                          |
+| ---------------------- | ------------------------------------------- |
+| `model`                | 默认使用的模型 ID，可从下方模型列表中选择                    |
+| `model_provider`       | 默认供应商，需与 `[model_providers.xxx]` 中的 ID 一致 |
+| `name`                 | 供应商显示名称，可自定义                              |
+| `base_url`             | ByteRouter 的 OpenAI 兼容地址，固定为 `https://byterouter.ai/v1` |
+| `wire_api`             | 通信协议，新版 Codex 需使用 `responses`（Responses API）  |
+| `requires_openai_auth` | 设为 `true`，使用 `auth.json` 中的密钥进行认证          |
+
+保存两个文件后，重新启动 Codex CLI 即可生效。
+
+<Warning>请确保 `auth.json` 是合法的 JSON 格式、`config.toml` 是合法的 TOML 格式，不要使用中文引号，否则配置不会生效。</Warning>
+
+## 第三步：开始使用
+
+### 验证配置
+
+在任意项目目录下运行以下命令，确认配置是否正确：
+
+```bash theme={null}
+codex "用一句话介绍你自己"
+```
+
+如果收到 AI 回复，说明配置成功。如果出现登录界面或 `401`、`403` 等错误，请参考下方常见问题排查。
+
+### 交互模式
+
+直接运行 `codex` 进入交互式界面，适合处理完整的编码任务：
+
+```bash theme={null}
+codex
+```
+
+进入后即可用自然语言描述需求，例如：
+
+```
+帮我创建一个 Express.js 服务器，包含一个返回 JSON 的健康检查接口
+```
+
+Codex 会自动分析项目、生成代码、运行命令，并在执行敏感操作前请求您确认。
+
+### 审批模式
+
+首次运行时，Codex 会让您选择操作审批级别：
+
+| 模式       | 说明                     |
+| -------- | ---------------------- |
+| **只读**   | 仅允许读取文件，任何修改和命令都需确认    |
+| **自动**   | 可在工作目录内自主读写文件、运行命令（推荐） |
+| **完全访问** | 无需确认即可执行任何操作，请谨慎使用     |
+
+建议从 **自动** 模式开始使用，在交互界面中输入 `/approvals` 可随时调整。
+
+### 切换模型
+
+在交互界面中输入 `/model` 命令即可快速切换模型，或修改 `config.toml` 中的 `model` 字段后重启。
+
+## 支持的模型
+
+在 Codex CLI 中，推荐使用以下 GPT-5 系列模型：
+
+| 模型 ID           | 特点               | 推荐场景            |
+| --------------- | ---------------- | --------------- |
+| `gpt-5.5`       | 最新旗舰，代码能力最强      | Codex 首选，复杂工程任务 |
+| `gpt-5.4`       | 上一代旗舰，能力强劲       | 复杂编码、架构设计       |
+| `gpt-5.4-mini`  | 轻量版，速度快、性价比高     | 日常编码、快速迭代       |
+| `gpt-5.3-codex` | 专为 Codex 优化的编码模型 | 智能体式编码任务        |
+| `gpt-5.2`       | 稳定均衡             | 常规编码任务          |
+
+<Tip>
+  **模型选择建议：** 以上 GPT-5 系列模型与 Codex CLI 配合最为顺畅。追求最佳效果推荐优先使用 `gpt-5.5`；其中 `gpt-5.3-codex` 专为 Codex 的智能体编码场景优化。
+</Tip>
+
+## 常用命令
+
+以下是 Codex CLI 中常用的命令和快捷操作：
+
+| 命令                      | 说明            |
+| ----------------------- | ------------- |
+| `codex`                 | 进入交互式界面       |
+| `codex "任务描述"`          | 带初始指令启动       |
+| `codex exec "任务描述"`     | 非交互模式，直接执行后退出 |
+| `codex --model gpt-5.4` | 指定模型启动        |
+| `codex --version`       | 查看版本号         |
+| `/model`                | 在交互界面中切换模型    |
+| `/approvals`            | 在交互界面中调整审批模式  |
+| `Ctrl + C`              | 退出交互界面        |
+
+## 常见问题
+
+### Q1: 启动后弹出登录界面？
+
+如果启动后显示登录提示，说明配置未生效。
+
+**排查步骤：**
+
+1. 确认 `config.toml` 和 `auth.json` 都位于 `~/.codex/` 目录下
+2. 检查 `config.toml` 中的 `model_provider` 是否为 `byterouter`
+3. 检查 `auth.json` 的 JSON 格式是否正确，密钥是否完整填入
+
+### Q2: 出现 401 / 403 错误？
+
+| 错误码                | 含义          | 解决方案                                     |
+| ------------------ | ----------- | ---------------------------------------- |
+| `401 Unauthorized` | API 密钥缺失或无效 | 检查 `auth.json` 中的密钥是否正确                |
+| `403 Forbidden`    | 权限不足或密钥过期   | 前往 [ByteRouter 控制台](https://byterouter.ai/keys) 确认密钥状态 |
+
+同时确保 `base_url` 设置为 `https://byterouter.ai/v1`。
+
+### Q3: 提示连接失败？
+
+1. 检查网络连接是否正常
+2. 确认 `config.toml` 中的 `base_url` 配置正确
+3. 如果使用了代理，确保代理设置允许访问 `byterouter.ai`
+
+### Q4: 提示 `wire_api = "chat"` 不再支持？
+
+新版 Codex CLI（0.84.0 及以后）已移除 `chat` 协议，请将 `config.toml` 中的 `wire_api` 改为 `responses`：
+
+```toml theme={null}
+wire_api = "responses"
+```
+
+ByteRouter 已提供 Responses API，修改后重新启动 Codex 即可。
+
+### Q5: 工具调用或运行报错？
+
+确认 `config.toml` 中的 `wire_api` 设置为 `responses`。如果遇到兼容性问题，建议切换为推荐的 GPT-5 系列模型（如 `gpt-5.5`、`gpt-5.3-codex`），与 Codex CLI 配合更稳定。
+
+### Q6: 想使用环境变量而非 auth.json？
+
+也可以通过环境变量配置密钥。将 `config.toml` 中供应商配置改为：
+
+```toml theme={null}
+[model_providers.byterouter]
+name = "ByteRouter"
+base_url = "https://byterouter.ai/v1"
+wire_api = "responses"
+env_key = "BYTEROUTER_API_KEY"
+```
+
+然后设置环境变量 `BYTEROUTER_API_KEY` 为您的 ByteRouter 密钥即可，此时无需 `auth.json`。
+
+### Q7: 如何切换模型？
+
+两种方式：
+
+1. **交互界面中**：输入 `/model` 命令即可切换
+2. **修改配置**：更改 `config.toml` 中的 `model` 字段，重启 Codex CLI
+
+## 支持与帮助
+
+如果您在使用过程中遇到任何问题，请联系我们：
+
+* 📧 技术支持：[br@byterouter.ai](mailto:br@byterouter.ai)
+
+---
+
+<Card title="开始使用 ByteRouter" icon="rocket" href="https://byterouter.ai">
+  立即注册 ByteRouter，获取您的 API 密钥，在 Codex CLI 中体验多模型编程助手！
+</Card>

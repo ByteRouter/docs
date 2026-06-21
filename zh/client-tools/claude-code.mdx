@@ -1,0 +1,298 @@
+---
+title: "在 Claude Code 中使用 ByteRouter"
+sidebarTitle: "Claude Code"
+description: "详细指导如何在 Claude Code CLI 中配置和使用 ByteRouter API 服务，通过简单的配置即可在终端中调用多种 AI 模型进行辅助编程。"
+---
+
+## 准备工作
+
+Claude Code 是 Anthropic 推出的命令行 AI 编程助手，支持在终端中直接与 AI 对话、生成代码、调试问题等。
+通过接入 ByteRouter，您可以在 Claude Code 中使用包括 GPT、Claude、Gemini 在内的多种模型。
+
+在开始之前，请确保：
+
+1. **已获取 ByteRouter API 密钥**
+   登录 [ByteRouter 控制台](https://byterouter.ai/keys) 获取您的 API 密钥
+
+<Note>
+  **提示：** 如果还没有 ByteRouter 账户，请先在 [ByteRouter
+  官网](https://byterouter.ai) 注册并获取 API 密钥。
+</Note>
+
+## 第一步：安装 Claude Code
+
+选择以下任一方式安装：
+
+<Tabs>
+  <Tab title="macOS / Linux（推荐）">
+    使用官方脚本一键安装：
+
+    ```bash theme={null}
+    curl -fsSL https://claude.ai/install.sh | bash
+    ```
+
+    也可以通过 Homebrew 安装：
+
+    ```bash theme={null}
+    brew install --cask claude-code
+    ```
+
+    <Note>如果遇到权限问题，请在命令前加 `sudo`。</Note>
+
+  </Tab>
+
+  <Tab title="Windows">
+    **PowerShell：**
+
+    ```powershell theme={null}
+    irm https://claude.ai/install.ps1 | iex
+    ```
+
+    **CMD：**
+
+    ```cmd theme={null}
+    curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+    ```
+
+  </Tab>
+
+  <Tab title="NPM 安装">
+    如果您已安装 Node.js 18 或更新版本，可以通过 npm 安装：
+
+    ```bash theme={null}
+    npm install -g @anthropic-ai/claude-code
+    ```
+
+    适用于所有操作系统。
+
+  </Tab>
+</Tabs>
+
+### 验证安装
+
+安装完成后，运行以下命令确认安装成功：
+
+```bash theme={null}
+claude --version
+```
+
+如果输出版本号（如 `1.x.x`），说明安装成功。
+
+## 第二步：配置 ByteRouter API
+
+以下提供三种配置方式，根据您的使用习惯任选其一。
+
+### 方式一：编辑 settings.json（推荐）
+
+这是最稳定的配置方式，配置一次即可长期生效。
+
+**1. 找到配置目录：**
+
+- Windows：按 `Win + R`，输入 `%userprofile%\.claude` 打开
+- macOS：按 `Command + Shift + G`，输入 `~/.claude` 打开
+- Linux：进入 `~/.claude` 目录
+
+<Note>
+  如果目录不存在，先在终端运行一次 `claude` 再按 `Ctrl + C`
+  退出，会自动生成该目录。
+</Note>
+
+**2. 创建或编辑 `settings.json` 文件：**
+
+```json theme={null}
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://byterouter.ai/v1",
+    "ANTHROPIC_AUTH_TOKEN": "your_api_key_here",
+    "ANTHROPIC_MODEL": "claude-sonnet-4.6"
+  }
+}
+```
+
+| 参数                   | 说明                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| `ANTHROPIC_BASE_URL`   | ByteRouter API 地址，固定为 `https://byterouter.ai/v1` |
+| `ANTHROPIC_AUTH_TOKEN` | 您的 ByteRouter API 密钥                               |
+| `ANTHROPIC_MODEL`      | 默认使用的模型，可从下方模型列表中选择                 |
+
+保存文件后，重新启动 Claude Code 即可生效。
+
+### 方式二：永久环境变量
+
+将配置写入系统环境，所有终端窗口都会自动加载。
+
+<Tabs>
+  <Tab title="macOS (zsh)">
+    ```bash theme={null}
+    echo 'export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"' >> ~/.zshrc
+    echo 'export ANTHROPIC_AUTH_TOKEN="your_api_key_here"' >> ~/.zshrc
+    echo 'export ANTHROPIC_MODEL="claude-sonnet-4.6"' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+  </Tab>
+
+  <Tab title="macOS / Linux (bash)">
+    ```bash theme={null}
+    echo 'export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"' >> ~/.bashrc
+    echo 'export ANTHROPIC_AUTH_TOKEN="your_api_key_here"' >> ~/.bashrc
+    echo 'export ANTHROPIC_MODEL="claude-sonnet-4.6"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+  </Tab>
+
+  <Tab title="Windows">
+    **方式 A：图形界面设置**
+
+    1. 右键 "此电脑" → "属性" → "高级系统设置" → "环境变量"
+    2. 在 "用户变量" 中新建：
+       * `ANTHROPIC_BASE_URL` = `https://byterouter.ai/v1`
+       * `ANTHROPIC_AUTH_TOKEN` = `your_api_key_here`
+       * `ANTHROPIC_MODEL` = `claude-sonnet-4.6`
+    3. 重启终端窗口
+
+    **方式 B：PowerShell 命令设置**
+
+    ```powershell theme={null}
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', 'https://byterouter.ai/v1', 'User')
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_AUTH_TOKEN', 'your_api_key_here', 'User')
+    [System.Environment]::SetEnvironmentVariable('ANTHROPIC_MODEL', 'claude-sonnet-4.6', 'User')
+    ```
+
+  </Tab>
+</Tabs>
+
+### 方式三：临时环境变量
+
+适合临时测试或短期使用，关闭终端后配置会失效。
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash theme={null}
+    export ANTHROPIC_AUTH_TOKEN="your_api_key_here"
+    export ANTHROPIC_MODEL="claude-sonnet-4.6"
+    export ANTHROPIC_BASE_URL="https://byterouter.ai/v1"
+    claude
+    ```
+  </Tab>
+
+<Tab title="Windows (PowerShell)">
+  ```powershell theme={null}
+  $env:ANTHROPIC_AUTH_TOKEN="your_api_key_here"
+  $env:ANTHROPIC_MODEL="claude-sonnet-4.6"
+  $env:ANTHROPIC_BASE_URL="https://byterouter.ai/v1" claude ```
+</Tab>
+
+  <Tab title="Windows (CMD)">
+    ```cmd theme={null}
+    set ANTHROPIC_AUTH_TOKEN=your_api_key_here
+    set ANTHROPIC_MODEL=claude-sonnet-4.6
+    set ANTHROPIC_BASE_URL=https://byterouter.ai/v1
+    claude
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  临时环境变量仅在当前终端窗口有效，切换窗口或关闭终端后需重新设置。
+</Warning>
+
+## 第三步：开始使用
+
+### 验证配置
+
+启动 Claude Code 并发送一条简单消息来确认配置是否正确：
+
+```bash theme={null}
+claude "你好"
+```
+
+如果收到 AI 回复，说明配置成功。如果出现错误，请参考下方常见问题排查。
+
+### 使用方式
+
+Claude Code 提供两种交互模式：
+
+- **交互模式**：运行 `claude` 进入持续对话，适合复杂任务
+- **单次命令**：运行 `claude "你的问题"` 获取单次回复后退出，适合快速提问
+
+### 支持的模型
+
+ByteRouter 支持多种 AI 模型，您可以根据任务需求灵活切换。详见[快速开始](/zh/quickstart)页面了解完整的模型列表。
+
+#### 常用模型示例
+
+| 模型名称            | 特点            |
+| ------------------- | --------------- |
+| `claude-sonnet-4.6` | 性能与速度均衡  |
+| `claude-opus-4.5`   | 最强综合能力    |
+| `gpt-4.1`           | 高效能 GPT 模型 |
+| `gemini-2.0`        | Google 高级模型 |
+
+### 常用命令
+
+以下是 Claude Code 中常用的命令和快捷操作：
+
+| 命令               | 说明                 |
+| ------------------ | -------------------- |
+| `claude`           | 进入交互模式         |
+| `claude "问题"`    | 单次提问             |
+| `claude --version` | 查看版本号           |
+| `/model`           | 在交互模式中切换模型 |
+| `/help`            | 查看帮助信息         |
+| `Ctrl + C`         | 退出交互模式         |
+
+## 常见问题
+
+### Q1: 配置后仍然弹出登录选择页面？
+
+启动后仍然显示 "Select login method" 说明配置未生效。
+
+**排查步骤：**
+
+1. **使用 settings.json 方式**：检查文件路径是否正确
+   - Windows：`C:\Users\<用户名>\.claude\settings.json`
+   - macOS / Linux：`~/.claude/settings.json`
+2. **使用环境变量方式**：确认在设置变量的**同一终端窗口**中启动了 Claude Code
+3. **检查 JSON 格式**：确保括号、逗号、引号都正确（不要使用中文引号）
+
+### Q2: 出现认证错误？
+
+| 错误信息           | 含义         | 解决方案                                                                    |
+| ------------------ | ------------ | --------------------------------------------------------------------------- |
+| `401 Unauthorized` | API 密钥无效 | 检查密钥是否正确，登录 [ByteRouter 控制台](https://byterouter.ai/keys) 确认 |
+| `403 Forbidden`    | 权限不足     | 确认 API 密钥是否过期或已被禁用                                             |
+
+同时确保 `ANTHROPIC_BASE_URL` 设置为 `https://byterouter.ai/v1`。
+
+### Q3: 提示 "Unable to connect" 连接失败？
+
+这说明 Claude Code 未能连接到 API 服务。
+
+1. 检查网络连接是否正常
+2. 确认 `ANTHROPIC_BASE_URL` 配置正确
+3. 如果使用了代理，确保代理设置允许访问 `byterouter.ai`
+
+### Q4: 如何切换模型？
+
+两种方式：
+
+1. **交互模式中**：输入 `/model` 命令即可切换
+2. **修改配置**：更改 `settings.json` 或环境变量中的 `ANTHROPIC_MODEL` 字段，重启 Claude Code
+
+### Q5: 响应速度慢？
+
+1. 切换到响应更快的模型
+2. 缩短提问内容，减少上下文长度
+3. 检查本地网络状况
+
+## 支持与帮助
+
+如果您在使用过程中遇到任何问题，请联系我们：
+
+- 📧 技术支持：[br@byterouter.ai](mailto:br@byterouter.ai)
+
+---
+
+<Card title="开始使用 ByteRouter" icon="rocket" href="https://byterouter.ai">
+  立即注册 ByteRouter，获取您的 API 密钥，在 Claude Code 中体验多模型编程助手！
+</Card>
